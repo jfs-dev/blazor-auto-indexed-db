@@ -1,0 +1,285 @@
+﻿@page "/indexed-db"
+@using TG.Blazor.IndexedDB
+@using blazor_auto_indexed_db.Client.Enums
+@using blazor_auto_indexed_db.Client.Interfaces
+@using blazor_auto_indexed_db.Client.Models
+@inject IndexedDBManager DbManager
+@implements IDisposable
+@attribute [StreamRendering]
+@rendermode InteractiveAuto
+
+<PageTitle>IndexedDB</PageTitle>
+
+@if (!string.IsNullOrEmpty(Message))
+{
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        @Message
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="accordion" id="accordionPanelsStayOpenExample">
+    <div class="accordion-item">
+        <h2 class="accordion-header">
+            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseOne" aria-expanded="true" aria-controls="panelsStayOpen-collapseOne">
+                Create Customer
+            </button>
+        </h2>
+        <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse show">
+            <div class="accordion-body">
+                <EditForm Model="@ModelCreateCustomer" OnValidSubmit="@CreateCustomerAsync">
+                    <DataAnnotationsValidator/>
+
+                    <div class="mb-3">
+                        <label for="Nome" class="form-label">Nome</label>
+                        <InputText class="form-control" type="text" id="Nome" @bind-Value="ModelCreateCustomer.Name"/>
+                        <ValidationMessage For="@(() => ModelCreateCustomer.Name)"/>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="Email" class="form-label">e-mail</label>
+                        <InputText class="form-control" type="text" id="Email" @bind-Value="ModelCreateCustomer.Email"/>
+                        <ValidationMessage For="@(() => ModelCreateCustomer.Email)"/>
+                    </div>
+
+                    <button class="btn btn-primary" type="submit">Create</button>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+  
+    <div class="accordion-item">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseTwo" aria-expanded="false" aria-controls="panelsStayOpen-collapseTwo">
+                Update Customer
+            </button>
+        </h2>
+        <div id="panelsStayOpen-collapseTwo" class="accordion-collapse collapse">
+            <div class="accordion-body">
+                <div class="mb-3">
+                    <label for="SearchId" class="form-label">Id</label>
+                    <InputNumber class="form-control" type="number" id="Id" @bind-Value="SearchId"/>
+                </div>
+
+                <button class="btn btn-primary" @onclick="() => GetCustomerByIdAsync(EOperationType.Update)">Get</button>
+
+                <hr />
+
+                <EditForm Model="@ModelUpdateCustomer" OnValidSubmit="@UpdateCustomerAsync">
+                    <DataAnnotationsValidator/>
+
+                    <div class="mb-3">
+                        <label for="Id" class="form-label">Id</label>
+                        <InputNumber class="form-control" type="number" id="Id" @bind-Value="ModelUpdateCustomer.Id" disabled readonly/>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="Nome" class="form-label">Nome</label>
+                        <InputText class="form-control" type="text" id="Nome" @bind-Value="ModelUpdateCustomer.Name"/>
+                        <ValidationMessage For="@(() => ModelUpdateCustomer.Name)"/>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="Email" class="form-label">e-mail</label>
+                        <InputText class="form-control" type="text" id="Email" @bind-Value="ModelUpdateCustomer.Email"/>
+                        <ValidationMessage For="@(() => ModelUpdateCustomer.Email)"/>
+                    </div>
+
+                    <button class="btn btn-primary" type="submit">Update</button>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+  
+    <div class="accordion-item">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseThree" aria-expanded="false" aria-controls="panelsStayOpen-collapseThree">
+                Delete Customer
+            </button>
+        </h2>
+        <div id="panelsStayOpen-collapseThree" class="accordion-collapse collapse">
+            <div class="accordion-body">
+                <div class="mb-3">
+                    <label for="SearchId" class="form-label">Id</label>
+                    <InputNumber class="form-control" type="number" id="Id" @bind-Value="SearchId"/>
+                </div>
+
+                <button class="btn btn-primary" @onclick="() => GetCustomerByIdAsync(EOperationType.Delete)">Get</button>
+
+                <hr />
+
+                <EditForm Model="@ModelDeleteCustomer" OnValidSubmit="@DeleteCustomerAsync">
+                    <div class="mb-3">
+                        <label for="Id" class="form-label">Id</label>
+                        <InputNumber class="form-control" type="number" id="Id" @bind-Value="ModelDeleteCustomer.Id" disabled readonly/>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="Nome" class="form-label">Nome</label>
+                        <InputText class="form-control" type="text" id="Nome" @bind-Value="ModelDeleteCustomer.Name" disabled readonly/>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="Email" class="form-label">e-mail</label>
+                        <InputText class="form-control" type="text" id="Email" @bind-Value="ModelDeleteCustomer.Email" disabled readonly/>
+                    </div>
+
+                    <button class="btn btn-danger" type="submit">Delete</button>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+
+    <div class="accordion-item">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseFour" aria-expanded="false" aria-controls="panelsStayOpen-collapseFour">
+                Get Customer By Id
+            </button>
+        </h2>
+        <div id="panelsStayOpen-collapseFour" class="accordion-collapse collapse">
+            <div class="accordion-body">
+                <div class="mb-3">
+                    <label for="SearchId" class="form-label">Id</label>
+                    <InputNumber class="form-control" type="number" id="Id" @bind-Value="SearchId"/>
+                </div>
+
+                <button class="btn btn-primary" @onclick="() => GetCustomerByIdAsync(EOperationType.Get)">Get</button>
+
+                <hr />
+
+                <div class="mb-3">
+                    <label for="Id" class="form-label">Id</label>
+                    <InputNumber class="form-control" type="text" id="Id" @bind-Value="ModelGetCustomerById.Id" disabled readonly/>
+                </div>
+
+                <div class="mb-3">
+                    <label for="Nome" class="form-label">Nome</label>
+                    <InputText class="form-control" type="text" id="Nome" @bind-Value="ModelGetCustomerById.Name" disabled readonly/>
+                </div>
+
+                <div class="mb-3">
+                    <label for="Email" class="form-label">e-mail</label>
+                    <InputText class="form-control" type="text" id="Email" @bind-Value="ModelGetCustomerById.Email" disabled readonly/>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="accordion-item">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseFive" aria-expanded="false" aria-controls="panelsStayOpen-collapseFive">
+                Get All Customers
+            </button>
+        </h2>
+
+        <div id="panelsStayOpen-collapseFive" class="accordion-collapse collapse">
+            <div class="accordion-body">
+                <button class="btn btn-primary" @onclick="GetAllCustomersAsync">Get All</button>
+    
+                @if (Customers != null)
+                {
+                    <hr />
+
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th scope="col">#</th>
+                                <th scope="col">Nome</th>
+                                <th scope="col">e-mail</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var customer in Customers)
+                            {
+                                <tr>
+                                    <td scope="row">@customer.Id</td>
+                                    <td>@customer.Name</td>
+                                    <td>@customer.Email</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <Spinner />
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Inject]
+    private ICustomerService CustomerService { get; set; } = null!;
+
+    private Customer ModelCreateCustomer { get; set; } = new();
+    
+    private Customer ModelUpdateCustomer { get; set; } = new();
+    
+    private Customer ModelDeleteCustomer { get; set; } = new();
+    
+    private Customer ModelGetCustomerById { get; set; } = new();
+
+    private List<Customer>? Customers { get; set; } = [];
+
+    private int SearchId  { get; set; }
+
+    private string Message { get; set; } = string.Empty;
+
+    protected override void OnInitialized() =>
+        DbManager.ActionCompleted += OnIndexedDbNotification;
+
+    private void OnIndexedDbNotification(object? sender, IndexedDBNotificationArgs args) =>
+        Message = args.Message;
+
+    private async Task CreateCustomerAsync()
+    {
+        await CustomerService.CreateCustomerAsync(ModelCreateCustomer);
+        ModelCreateCustomer = new();
+    }
+
+    private async Task UpdateCustomerAsync()
+    {
+        await CustomerService.UpdateCustomerAsync(ModelUpdateCustomer);
+        ModelUpdateCustomer = new();
+    }
+
+    private async Task DeleteCustomerAsync()
+    {
+        await CustomerService.DeleteCustomerAsync(ModelDeleteCustomer.Id);
+        ModelDeleteCustomer = new();
+    }
+
+    private async Task GetCustomerByIdAsync(EOperationType operation)
+    {
+        switch (operation)
+        {
+            case EOperationType.Update:
+                ModelUpdateCustomer = await CustomerService.GetCustomerByIdAsync(SearchId) ?? new();
+                break;
+            
+            case EOperationType.Delete:
+                ModelDeleteCustomer = await CustomerService.GetCustomerByIdAsync(SearchId) ?? new();
+                break;
+            
+            default:
+                ModelGetCustomerById = await CustomerService.GetCustomerByIdAsync(SearchId) ?? new();
+                break;
+        }
+
+        SearchId = 0;
+    }
+
+    private async Task GetAllCustomersAsync()
+    {
+        Customers = null;
+        await Task.Delay(500);
+        
+        Customers = await CustomerService.GetAllCustomersAsync();
+    }
+
+
+    public void Dispose() =>
+        DbManager.ActionCompleted -= OnIndexedDbNotification;
+}
